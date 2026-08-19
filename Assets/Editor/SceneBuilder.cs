@@ -48,7 +48,10 @@ namespace RescueVR.EditorTools
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
             GameObject session = ExecuteMenuAndCaptureNewRoot("GameObject/XR/AR Session");
-            GameObject xrOrigin = ExecuteMenuAndCaptureNewRoot("GameObject/XR/XR Origin (AR)");
+            // Named "XR Origin (Mobile AR)" as of AR Foundation 5.2.x — older/newer versions
+            // may call it "XR Origin (AR)"; if this stops matching, open GameObject > XR in
+            // the Editor and check the submenu's exact wording.
+            GameObject xrOrigin = ExecuteMenuAndCaptureNewRoot("GameObject/XR/XR Origin (Mobile AR)");
 
             if (session == null || xrOrigin == null)
             {
