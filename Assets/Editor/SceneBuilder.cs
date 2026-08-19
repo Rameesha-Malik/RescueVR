@@ -98,20 +98,26 @@ namespace RescueVR.EditorTools
                 new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
             }
 
-            Text stepText = CreateText("StepPromptText", canvasGo.transform, new Vector2(0f, 220f),
-                new Vector2(500f, 60f), "Check the victim's pulse.");
-            Text resultText = CreateText("ResultText", canvasGo.transform, new Vector2(0f, 150f),
-                new Vector2(500f, 60f), string.Empty);
+            // Anchored to the top/bottom edges (not a fixed pixel offset from center) so this
+            // stays on-screen regardless of the actual Game view resolution.
+            Text stepText = CreateText("StepPromptText", canvasGo.transform, "Check the victim's pulse.");
+            AnchorToTop(stepText.rectTransform, -40f);
+
+            Text resultText = CreateText("ResultText", canvasGo.transform, string.Empty);
+            AnchorToTop(resultText.rectTransform, -110f);
 
             GameObject buttonGo = new GameObject("LiftButton", typeof(Image), typeof(Button));
             buttonGo.transform.SetParent(canvasGo.transform, false);
             RectTransform buttonRect = buttonGo.GetComponent<RectTransform>();
+            buttonRect.anchorMin = new Vector2(0.5f, 0f);
+            buttonRect.anchorMax = new Vector2(0.5f, 0f);
+            buttonRect.pivot = new Vector2(0.5f, 0f);
             buttonRect.sizeDelta = new Vector2(220f, 56f);
-            buttonRect.anchoredPosition = new Vector2(0f, -220f);
+            buttonRect.anchoredPosition = new Vector2(0f, 40f);
             Button button = buttonGo.GetComponent<Button>();
 
-            Text buttonLabel = CreateText("Text", buttonGo.transform, Vector2.zero, Vector2.zero, "Lift Patient");
-            RectTransform labelRect = buttonLabel.GetComponent<RectTransform>();
+            Text buttonLabel = CreateText("Text", buttonGo.transform, "Lift Patient");
+            RectTransform labelRect = buttonLabel.rectTransform;
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;
             labelRect.offsetMin = Vector2.zero;
@@ -125,14 +131,21 @@ namespace RescueVR.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static Text CreateText(string name, Transform parent, Vector2 anchoredPos, Vector2 size, string content)
+        /// <summary>Stretches a RectTransform's width to the full canvas width and pins it to
+        /// the top edge, offset down by -yOffset pixels. Resolution-independent.</summary>
+        private static void AnchorToTop(RectTransform rect, float yOffset)
+        {
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.sizeDelta = new Vector2(0f, 60f);
+            rect.anchoredPosition = new Vector2(0f, yOffset);
+        }
+
+        private static Text CreateText(string name, Transform parent, string content)
         {
             GameObject go = new GameObject(name, typeof(Text));
             go.transform.SetParent(parent, false);
-
-            RectTransform rect = go.GetComponent<RectTransform>();
-            rect.sizeDelta = size;
-            rect.anchoredPosition = anchoredPos;
 
             Text text = go.GetComponent<Text>();
             text.text = content;
