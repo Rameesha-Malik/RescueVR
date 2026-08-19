@@ -1,9 +1,12 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.XR.ARFoundation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using RescueVR.AR;
 using RescueVR.Core;
 using RescueVR.Interaction;
 using RescueVR.UI;
@@ -27,6 +30,70 @@ namespace RescueVR.EditorTools
     {
         private const string ScenesFolder = "Assets/Scenes";
         private const string ScenePath = ScenesFolder + "/PairB_TestScene.unity";
+        private const string ARScenePath = ScenesFolder + "/PairA_ARTestScene.unity";
+
+        /// <summary>
+        /// Builds Pair A1's AR tap-to-place scene: AR Session, XR Origin (AR) with AR Plane
+        /// Manager + AR Raycast Manager, and TapToPlace.cs attached (spawns its built-in
+        /// placeholder cube until a real car prefab is assigned in the Inspector).
+        ///
+        /// Uses Unity's own "GameObject -> XR -> ..." menu commands under the hood instead of
+        /// hand-building the AR Foundation hierarchy, since that hierarchy is version-specific
+        /// and easy to get subtly wrong by reconstructing it manually — routing through the
+        /// real menu command guarantees the same result you'd get clicking it yourself.
+        /// </summary>
+        [MenuItem("RescueVR/Build Pair A AR Scene")]
+        public static void BuildPairAARScene()
+        {
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            GameObject session = ExecuteMenuAndCaptureNewRoot("GameObject/XR/AR Session");
+            GameObject xrOrigin = ExecuteMenuAndCaptureNewRoot("GameObject/XR/XR Origin (AR)");
+
+            if (session == null || xrOrigin == null)
+            {
+                Debug.LogError("[SceneBuilder] Could not create AR Session / XR Origin (AR) via the " +
+                    "GameObject > XR menu — those menu items weren't found. This usually means AR " +
+                    "Foundation isn't fully installed yet. Open Window > Package Manager and confirm " +
+                    "'AR Foundation' shows under 'In Project', then try this again. Falling back: " +
+                    "create them by hand via GameObject > XR > AR Session and > XR Origin (AR).");
+                return;
+            }
+
+            xrOrigin.AddComponent<ARPlaneManager>();
+            xrOrigin.AddComponent<ARRaycastManager>();
+            xrOrigin.AddComponent<TapToPlace>();
+
+            if (!Directory.Exists(ScenesFolder))
+            {
+                Directory.CreateDirectory(ScenesFolder);
+            }
+
+            EditorSceneManager.SaveScene(scene, ARScenePath);
+            AssetDatabase.Refresh();
+            Debug.Log($"[SceneBuilder] Pair A AR scene built and saved to {ARScenePath}. " +
+                      "Build & Run to your Android phone to test tap-to-place (it spawns a debug " +
+                      "cube until you assign a real car prefab to TapToPlace > Placement Prefab).");
+        }
+
+        /// <summary>Runs a GameObject-creating menu command and returns whichever new root
+        /// GameObject appeared in the scene as a result, regardless of what Unity named it.</summary>
+        private static GameObject ExecuteMenuAndCaptureNewRoot(string menuPath)
+        {
+            var scene = EditorSceneManager.GetActiveScene();
+            var before = new HashSet<GameObject>(scene.GetRootGameObjects());
+
+            EditorApplication.ExecuteMenuItem(menuPath);
+
+            foreach (GameObject go in scene.GetRootGameObjects())
+            {
+                if (!before.Contains(go))
+                {
+                    return go;
+                }
+            }
+            return null;
+        }
 
         [MenuItem("RescueVR/Build Pair B Test Scene")]
         public static void BuildPairBTestScene()
