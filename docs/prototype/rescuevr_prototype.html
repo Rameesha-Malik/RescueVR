@@ -1,0 +1,561 @@
+<title>RescueVR Walkthrough</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  :root{
+    --bg:#0C1016;
+    --field:#141A22;
+    --panel:#1B2330;
+    --panel-line:#2A3341;
+    --text:#ECE9E2;
+    --muted:#8C93A0;
+    --amber:#F4A61D;
+    --amber-dim:#7A5A1F;
+    --danger:#E5484D;
+    --success:#2FB380;
+    --grid-line:rgba(244,166,29,0.09);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"IBM Plex Sans",system-ui,sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:48px 24px;
+  }
+  ::selection{background:var(--amber);color:#1a1300;}
+
+  .stage{
+    width:100%;
+    max-width:1180px;
+    display:grid;
+    grid-template-columns:minmax(280px,380px) minmax(0,1fr);
+    gap:56px;
+    align-items:start;
+  }
+  @media (max-width:880px){
+    .stage{grid-template-columns:1fr;}
+  }
+
+  /* ---------- Left: context panel ---------- */
+  .context{
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--amber);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px;height:7px;border-radius:50%;
+    background:var(--amber);
+    box-shadow:0 0 0 3px var(--amber-dim);
+  }
+  h1{
+    font-family:"Big Shoulders Display",sans-serif;
+    font-weight:800;
+    font-size:clamp(38px,5vw,54px);
+    line-height:0.95;
+    letter-spacing:0.01em;
+    text-transform:uppercase;
+    margin:0;
+    text-wrap:balance;
+  }
+  .lede{
+    font-size:15px;
+    line-height:1.6;
+    color:var(--muted);
+    margin:0;
+    max-width:46ch;
+  }
+  .lede strong{color:var(--text);font-weight:600;}
+
+  .steps{
+    list-style:none;
+    margin:0;padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    border-top:1px solid var(--panel-line);
+  }
+  .steps li{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 2px;
+    border-bottom:1px solid var(--panel-line);
+    font-size:14px;
+    color:var(--muted);
+    transition:color .2s ease;
+  }
+  .steps li .dot{
+    width:20px;height:20px;
+    border-radius:50%;
+    border:1.5px solid var(--panel-line);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:10px;
+    color:var(--muted);
+    transition:all .2s ease;
+  }
+  .steps li.done{color:var(--text);}
+  .steps li.done .dot{
+    background:var(--success);
+    border-color:var(--success);
+    color:#06231a;
+  }
+  .steps li.active{color:var(--text);}
+  .steps li.active .dot{
+    border-color:var(--amber);
+    color:var(--amber);
+  }
+
+  .meta{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11.5px;
+    color:var(--muted);
+    padding-top:4px;
+  }
+  .meta span{color:var(--text);}
+
+  /* ---------- Right: phone mockup ---------- */
+  .phone-wrap{
+    display:flex;
+    justify-content:center;
+  }
+  .phone{
+    position:relative;
+    width:320px;
+    height:640px;
+    border-radius:34px;
+    background:#05070A;
+    border:2px solid #2A3341;
+    box-shadow:0 30px 70px -25px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.03);
+    overflow:hidden;
+  }
+  .notch{
+    position:absolute;
+    top:10px;left:50%;
+    transform:translateX(-50%);
+    width:90px;height:18px;
+    background:#05070A;
+    border-radius:10px;
+    z-index:20;
+  }
+
+  .screen{
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(244,166,29,0.05), transparent 45%),
+      linear-gradient(180deg, #1a2130 0%, var(--field) 40%, #10141b 100%);
+    overflow:hidden;
+  }
+  /* AR scan grid, subtle */
+  .ar-grid{
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:28px 28px;
+    -webkit-mask-image:radial-gradient(ellipse at 50% 55%, black 45%, transparent 78%);
+            mask-image:radial-gradient(ellipse at 50% 55%, black 45%, transparent 78%);
+    opacity:0.9;
+  }
+
+  .status-bar{
+    position:relative;
+    z-index:5;
+    padding:44px 20px 0;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .status-label{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:9.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--amber);
+  }
+  .prompt{
+    font-family:"Big Shoulders Display",sans-serif;
+    font-weight:700;
+    font-size:19px;
+    line-height:1.15;
+    text-transform:uppercase;
+    letter-spacing:0.01em;
+    min-height:2.3em;
+    display:flex;
+    align-items:center;
+    text-wrap:balance;
+  }
+
+  /* ground plane + car/victim glyph */
+  .scene{
+    position:absolute;
+    left:0; right:0; bottom:118px;
+    height:280px;
+    z-index:3;
+  }
+  .ground{
+    position:absolute;
+    left:-20px; right:-20px; bottom:0;
+    height:60px;
+    background:linear-gradient(180deg, transparent, rgba(0,0,0,0.55));
+    border-top:1px solid var(--grid-line);
+    transform:perspective(180px) rotateX(35deg);
+    transform-origin:bottom;
+  }
+  .rig{
+    position:absolute;
+    left:50%; bottom:34px;
+    transform:translateX(-50%);
+    width:230px;
+    height:170px;
+  }
+  .car{
+    position:absolute;
+    left:6px; top:6px;
+    width:150px;height:70px;
+  }
+  .victim{
+    position:absolute;
+    right:2px; bottom:2px;
+    width:150px;
+  }
+
+  .zone{
+    position:absolute;
+    width:44px;height:44px;
+    border-radius:50%;
+    border:2px solid var(--amber);
+    background:rgba(244,166,29,0.12);
+    cursor:pointer;
+    transform:translate(-50%,-50%);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .15s ease, background .2s ease, border-color .2s ease;
+    animation:pulse-ring 2.1s ease-in-out infinite;
+  }
+  .zone:hover{transform:translate(-50%,-50%) scale(1.08);}
+  .zone:active{transform:translate(-50%,-50%) scale(0.94);}
+  .zone::after{
+    content:"";
+    width:7px;height:7px;border-radius:50%;
+    background:var(--amber);
+  }
+  .zone.done{
+    border-color:var(--success);
+    background:rgba(47,179,128,0.16);
+    animation:none;
+  }
+  .zone.done::after{background:var(--success);}
+  .zone[data-zone="pulse"]{left:37%; top:38%;}
+  .zone[data-zone="breathing"]{left:60%; top:24%;}
+  .zone[data-zone="neck"]{left:70%; top:12%;}
+
+  @keyframes pulse-ring{
+    0%,100%{box-shadow:0 0 0 0 rgba(244,166,29,0.35);}
+    50%{box-shadow:0 0 0 8px rgba(244,166,29,0);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .zone{animation:none;}
+  }
+
+  .zone-tag{
+    position:absolute;
+    bottom:-20px; left:50%;
+    transform:translateX(-50%);
+    font-family:"IBM Plex Mono",monospace;
+    font-size:8.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--muted);
+    white-space:nowrap;
+    pointer-events:none;
+  }
+
+  .action-bar{
+    position:absolute;
+    left:16px; right:16px; bottom:26px;
+    z-index:5;
+  }
+  .lift-btn{
+    width:100%;
+    padding:14px 0;
+    border-radius:12px;
+    border:1.5px solid var(--panel-line);
+    background:var(--panel);
+    color:var(--text);
+    font-family:"Big Shoulders Display",sans-serif;
+    font-weight:700;
+    font-size:16px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:border-color .2s ease, background .2s ease, transform .1s ease;
+  }
+  .lift-btn:hover{border-color:var(--amber);}
+  .lift-btn:active{transform:scale(0.98);}
+  .lift-btn:disabled{opacity:0.45;cursor:not-allowed;}
+
+  .result{
+    position:absolute;
+    inset:0;
+    z-index:15;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    text-align:center;
+    padding:0 30px;
+    background:rgba(6,8,11,0.88);
+    backdrop-filter:blur(2px);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+  }
+  .result.show{opacity:1;pointer-events:auto;}
+  .result-icon{
+    width:56px;height:56px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:22px;
+    font-weight:600;
+  }
+  .result.fail .result-icon{background:rgba(229,72,77,0.15);color:var(--danger);border:1.5px solid var(--danger);}
+  .result.ok .result-icon{background:rgba(47,179,128,0.15);color:var(--success);border:1.5px solid var(--success);}
+  .result-title{
+    font-family:"Big Shoulders Display",sans-serif;
+    font-weight:800;
+    font-size:23px;
+    text-transform:uppercase;
+    letter-spacing:0.01em;
+  }
+  .result.fail .result-title{color:var(--danger);}
+  .result.ok .result-title{color:var(--success);}
+  .result-msg{
+    font-size:13px;
+    color:var(--muted);
+    line-height:1.5;
+    max-width:26ch;
+  }
+  .retry-btn{
+    margin-top:6px;
+    padding:10px 22px;
+    border-radius:10px;
+    border:1.5px solid var(--panel-line);
+    background:transparent;
+    color:var(--text);
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    cursor:pointer;
+  }
+  .retry-btn:hover{border-color:var(--amber);color:var(--amber);}
+
+  .footnote{
+    font-size:11.5px;
+    color:var(--muted);
+    line-height:1.6;
+    max-width:46ch;
+    border-top:1px solid var(--panel-line);
+    padding-top:16px;
+  }
+  .footnote code{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    color:var(--amber);
+    background:rgba(244,166,29,0.08);
+    padding:1px 5px;
+    border-radius:4px;
+  }
+</style>
+
+<div class="stage">
+
+  <div class="context">
+    <div class="eyebrow">Prototype walkthrough</div>
+    <h1>RescueVR</h1>
+    <p class="lede">
+      A visual walkthrough of the AR rescue sequence — <strong>tap the pulse, breathing,
+      and neck-brace zones in order</strong>, then attempt the lift. Skip a step, or lift
+      early, and the scenario fails with a spinal-fracture warning, exactly like the shipped
+      <code>RescueManager.cs</code> logic.
+    </p>
+
+    <ul class="steps" id="stepList">
+      <li id="step-pulse"><span class="dot">1</span> Check pulse</li>
+      <li id="step-breathing"><span class="dot">2</span> Check breathing</li>
+      <li id="step-neck"><span class="dot">3</span> Apply neck brace</li>
+      <li id="step-lift"><span class="dot">4</span> Lift patient</li>
+    </ul>
+
+    <div class="meta">
+      <div>Zone tags &rarr; <span>Zone_Pulse · Zone_Breathing · Zone_Neck</span></div>
+      <div>Report call &rarr; <span>RescueManager.Instance.ZoneTouched()</span></div>
+    </div>
+
+    <p class="footnote">
+      This is a browser mockup standing in for the on-device build while Unity/AR packages
+      finish resolving — not a recording of the live app. Screen-record this sequence
+      (success run, then a fail run) as backup footage for the pitch deck's demo slide.
+    </p>
+  </div>
+
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="ar-grid"></div>
+
+        <div class="status-bar">
+          <div class="status-label">AR Scene — Crash Site</div>
+          <div class="prompt" id="promptText">Check the victim's pulse.</div>
+        </div>
+
+        <div class="scene">
+          <div class="ground"></div>
+          <div class="rig">
+            <svg class="car" viewBox="0 0 150 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 52 L14 30 Q20 20 34 19 L96 15 Q112 15 120 27 L142 40 L142 52 Q142 58 136 58 L16 58 Q6 58 6 52 Z" fill="#232C3A" stroke="#3A4557" stroke-width="1.5"/>
+              <path d="M40 22 L54 20 L58 32 L38 33 Z" fill="#141A22" opacity="0.7"/>
+              <path d="M68 18 L98 16 L104 30 L70 31 Z" fill="#141A22" opacity="0.7"/>
+              <circle cx="34" cy="57" r="9" fill="#0B0E13" stroke="#4A5568" stroke-width="2"/>
+              <circle cx="118" cy="57" r="9" fill="#0B0E13" stroke="#4A5568" stroke-width="2"/>
+              <path d="M118 32 L136 40" stroke="#F4A61D" stroke-width="1.2" opacity="0.6"/>
+              <path d="M20 24 L30 20" stroke="#8C93A0" stroke-width="1" opacity="0.5"/>
+            </svg>
+            <svg class="victim" viewBox="0 0 150 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="75" cy="55" rx="70" ry="4" fill="#000" opacity="0.35"/>
+              <path d="M18 40 Q30 30 46 32 L98 36 Q112 37 120 30" stroke="#C9A98A" stroke-width="9" stroke-linecap="round" fill="none"/>
+              <circle cx="126" cy="27" r="9" fill="#D9B693"/>
+              <path d="M40 34 L36 46" stroke="#C9A98A" stroke-width="7" stroke-linecap="round"/>
+              <path d="M60 35 L58 48" stroke="#C9A98A" stroke-width="7" stroke-linecap="round"/>
+              <path d="M18 40 Q30 30 46 32" stroke="#3A4557" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.55"/>
+            </svg>
+
+            <div class="zone" data-zone="pulse" style="left:26%;top:64%;" title="Zone_Pulse">
+              <span class="zone-tag">pulse</span>
+            </div>
+            <div class="zone" data-zone="breathing" style="left:46%;top:52%;" title="Zone_Breathing">
+              <span class="zone-tag">breathing</span>
+            </div>
+            <div class="zone" data-zone="neck" style="left:80%;top:40%;" title="Zone_Neck">
+              <span class="zone-tag">neck</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button class="lift-btn" id="liftBtn">Lift Patient</button>
+        </div>
+
+        <div class="result fail" id="resultPanel">
+          <div class="result-icon">!</div>
+          <div class="result-title" id="resultTitle">Spinal Fracture</div>
+          <div class="result-msg" id="resultMsg">Restart — the neck wasn't stabilized before the lift.</div>
+          <button class="retry-btn" id="retryBtn">Restart sequence</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var state = { pulse:false, breathing:false, neck:false };
+  var order = ["pulse","breathing","neck"];
+  var promptText = document.getElementById("promptText");
+  var liftBtn = document.getElementById("liftBtn");
+  var resultPanel = document.getElementById("resultPanel");
+  var resultTitle = document.getElementById("resultTitle");
+  var resultMsg = document.getElementById("resultMsg");
+  var retryBtn = document.getElementById("retryBtn");
+
+  var prompts = {
+    pulse: "Check the victim's pulse.",
+    breathing: "Check the victim's breathing.",
+    neck: "Apply the neck brace.",
+    done: "All checks complete — lift the patient."
+  };
+
+  function nextPrompt(){
+    if(!state.pulse) return prompts.pulse;
+    if(!state.breathing) return prompts.breathing;
+    if(!state.neck) return prompts.neck;
+    return prompts.done;
+  }
+
+  function setStepUI(){
+    order.forEach(function(z){
+      var li = document.getElementById("step-" + z);
+      li.classList.toggle("done", state[z]);
+      li.classList.toggle("active", !state[z] && nextPrompt() === prompts[z]);
+    });
+    document.getElementById("step-lift").classList.toggle(
+      "active", state.pulse && state.breathing && state.neck
+    );
+    promptText.textContent = nextPrompt();
+  }
+
+  function zoneTouched(name){
+    state[name] = true;
+    var el = document.querySelector('.zone[data-zone="' + name + '"]');
+    el.classList.add("done");
+    setStepUI();
+  }
+
+  document.querySelectorAll(".zone").forEach(function(el){
+    el.addEventListener("click", function(){
+      if(el.classList.contains("done")) return;
+      zoneTouched(el.getAttribute("data-zone"));
+    });
+  });
+
+  liftBtn.addEventListener("click", function(){
+    var ok = state.pulse && state.breathing && state.neck;
+    document.getElementById("step-lift").classList.add("done");
+    resultPanel.classList.remove("fail","ok");
+    if(ok){
+      resultPanel.classList.add("ok","show");
+      resultTitle.textContent = "Patient Stabilized";
+      resultMsg.textContent = "Great job! Patient stabilized.";
+    } else {
+      resultPanel.classList.add("fail","show");
+      resultTitle.textContent = "Spinal Fracture";
+      resultMsg.textContent = "SPINAL FRACTURE — Restart. A step was skipped before the lift.";
+    }
+  });
+
+  retryBtn.addEventListener("click", function(){
+    state = { pulse:false, breathing:false, neck:false };
+    document.querySelectorAll(".zone").forEach(function(el){ el.classList.remove("done"); });
+    document.getElementById("step-lift").classList.remove("done","active");
+    resultPanel.classList.remove("show");
+    setStepUI();
+  });
+
+  setStepUI();
+})();
+</script>
