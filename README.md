@@ -7,17 +7,30 @@ before attempting to lift them — skipping a step or lifting too early triggers
 **"Spinal Fracture"** fail state.
 
 > This repo *is* the Unity project. Clone it, open the folder directly in Unity Hub
-> (`Add project from disk`), and Unity will resolve the packages listed below on first open.
+> (`Add project from disk`).
 
 ## Tech stack
-- Unity **2022 LTS** (`ProjectSettings/ProjectVersion.txt` pins `2022.3.21f1` — a nearby 2022
-  LTS patch version will open fine, Unity will just ask to confirm)
-- URP (Universal Render Pipeline)
+- Unity **2022.x** (`ProjectSettings/ProjectVersion.txt` is kept matched to whatever Editor
+  version the team actually has installed — check that file rather than assuming a specific
+  patch)
+- **Built-in Render Pipeline** (not URP — see [Why not URP?](#why-not-urp) below)
 - AR Foundation + ARCore XR Plugin (Android mobile AR — camera passthrough, plane detection,
-  tap-to-place)
-- XR Interaction Toolkit + XR Management (kept available for an optional VR-headset input path;
-  the current build target is phone AR, see [Why AR and not a headset?](#why-ar-and-not-a-headset))
-- TextMeshPro / uGUI for the in-scene feedback UI
+  tap-to-place) — **add via the Editor's Package Manager, not by hand-editing manifest.json**
+  (see Getting Started)
+- XR Interaction Toolkit, if a VR-headset input path is ever added later — optional, not
+  currently installed
+- uGUI (built into every Unity install) for the in-scene feedback UI; TextMeshPro optional
+
+## Why not URP?
+Package versions (URP, AR Foundation, etc.) are tied tightly to the exact Editor patch
+version, and Unity's package registry blocks anonymous/unauthenticated requests from seeing
+its real version history — so nothing outside the Unity Editor itself (no external tool,
+script, or AI agent) can reliably guess a version number that will actually resolve. Trying to
+hand-pin one in `manifest.json` from outside the Editor caused repeated "package cannot be
+found" failures. URP is a nice-to-have for performance, not a requirement — the Built-in
+Render Pipeline works fine for this project, so `Packages/manifest.json` is intentionally kept
+minimal (`{"dependencies": {}}`) and every real package gets added **from inside Unity**,
+where the Editor's own licensed client resolves a version it actually knows is compatible.
 
 ## Repo structure
 ```
@@ -56,11 +69,19 @@ sides:
 - The exact strings passed in: `"Pulse"`, `"Breathing"`, `"Neck"`
 
 ## Getting started
-1. Install **Unity Hub** → install **Unity 2022 LTS** with the **Android Build Support**
-   module (and its OpenJDK + Android SDK/NDK sub-modules).
-2. In Unity Hub: **Add → Add project from disk** → select this cloned folder.
-3. Let Unity resolve packages from `Packages/manifest.json` on first open (may take a few
-   minutes).
+1. Install **Unity Hub** → install a **Unity 2022.x Editor** with the **Android Build Support**
+   module (and its OpenJDK + Android SDK/NDK sub-modules). Whatever version you already have
+   installed is fine — you don't need to match a specific patch.
+2. In Unity Hub: **Add → Add project from disk** → select this cloned folder. It should open
+   cleanly since `manifest.json` has no external package pins to conflict with your Editor
+   version.
+3. Once it's open, add the real packages from **inside the Editor**: `Window → Package Manager`
+   → the `+` dropdown (top-left) → **Add package by name** → enter the name below, leave the
+   version field **blank**, click Add. Repeat for each:
+   - `com.unity.xr.arfoundation`
+   - `com.unity.xr.arcore`
+   This lets the Editor's own licensed client resolve whichever version is actually compatible
+   — don't hand-edit `manifest.json` with a guessed version number, it will just fail again.
 4. Read `docs/PairA_WorkPlan.md` or `docs/PairB_WorkPlan.md` depending on your role, and work
    through it top to bottom — each numbered step tells you which script (if any) already
    covers it.
