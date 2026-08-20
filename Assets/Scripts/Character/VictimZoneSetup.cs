@@ -31,22 +31,49 @@ namespace RescueVR.Character
         [Header("Zone Size")]
         [SerializeField] private float zoneRadius = 0.08f;
 
+        [Header("Debug Visibility")]
+        [Tooltip("Adds a small colored sphere at each zone so you can actually see where to " +
+                 "tap while testing in the Editor/on a phone. The real trigger collider stays " +
+                 "invisible either way — these markers are purely visual and have no collider " +
+                 "of their own, so they never interfere with tap detection. Turn this off (and " +
+                 "re-run Create Zones, or use 'Remove Debug Markers') before your final demo if " +
+                 "you want the zones fully invisible again.")]
+        [SerializeField] private bool showDebugMarkers = true;
+
         private const string ZONE_PULSE_NAME = "Zone_Pulse";
         private const string ZONE_BREATHING_NAME = "Zone_Breathing";
         private const string ZONE_NECK_NAME = "Zone_Neck";
+        private const string MARKER_NAME = "DebugMarker";
 
         [ContextMenu("Create Zones")]
         public void CreateZones()
         {
-            CreateZoneIfMissing(ZONE_PULSE_NAME, pulseOffset);
-            CreateZoneIfMissing(ZONE_BREATHING_NAME, breathingOffset);
-            CreateZoneIfMissing(ZONE_NECK_NAME, neckOffset);
+            CreateZoneIfMissing(ZONE_PULSE_NAME, pulseOffset, new Color(1f, 0.3f, 0.3f, 0.85f));
+            CreateZoneIfMissing(ZONE_BREATHING_NAME, breathingOffset, new Color(0.3f, 0.8f, 1f, 0.85f));
+            CreateZoneIfMissing(ZONE_NECK_NAME, neckOffset, new Color(1f, 0.9f, 0.2f, 0.85f));
 
-            Debug.Log("[VictimZoneSetup] Zones ready: Zone_Pulse, Zone_Breathing, Zone_Neck " +
-                      "(reposition their transforms in the Inspector to match the model).");
+            Debug.Log("[VictimZoneSetup] Zones ready: Zone_Pulse (red), Zone_Breathing (blue), " +
+                      "Zone_Neck (yellow) — reposition their transforms in the Inspector to match " +
+                      "the model. Colored markers are visible for testing; see 'Remove Debug " +
+                      "Markers' to hide them again before your final demo.");
         }
 
-        private void CreateZoneIfMissing(string zoneName, Vector3 localOffset)
+        [ContextMenu("Remove Debug Markers")]
+        public void RemoveDebugMarkers()
+        {
+            foreach (string zoneName in new[] { ZONE_PULSE_NAME, ZONE_BREATHING_NAME, ZONE_NECK_NAME })
+            {
+                Transform zone = transform.Find(zoneName);
+                Transform marker = zone != null ? zone.Find(MARKER_NAME) : null;
+                if (marker != null)
+                {
+                    DestroyImmediate(marker.gameObject);
+                }
+            }
+            Debug.Log("[VictimZoneSetup] Debug markers removed — zones are invisible again.");
+        }
+
+        private void CreateZoneIfMissing(string zoneName, Vector3 localOffset, Color markerColor)
         {
             Transform existing = transform.Find(zoneName);
             if (existing != null)
@@ -64,6 +91,35 @@ namespace RescueVR.Character
             SphereCollider collider = zone.AddComponent<SphereCollider>();
             collider.isTrigger = true;
             collider.radius = zoneRadius;
+
+            if (showDebugMarkers)
+            {
+                CreateDebugMarker(zone.transform, markerColor);
+            }
+        }
+
+        /// <summary>Purely visual — no collider — so it can never block or redirect a raycast
+        /// meant for the real trigger collider on the zone's parent GameObject.</summary>
+        private void CreateDebugMarker(Transform parent, Color color)
+        {
+            GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            marker.name = MARKER_NAME;
+            marker.transform.SetParent(parent, worldPositionStays: false);
+            marker.transform.localPosition = Vector3.zero;
+            marker.transform.localScale = Vector3.one * (zoneRadius * 2.2f);
+
+            Collider markerCollider = marker.GetComponent<Collider>();
+            if (markerCollider != null)
+            {
+                DestroyImmediate(markerCollider);
+            }
+
+            Renderer renderer = marker.GetComponent<Renderer>();
+            Material mat = new Material(Shader.Find("Unlit/Color"))
+            {
+                color = color
+            };
+            renderer.sharedMaterial = mat;
         }
     }
 }
