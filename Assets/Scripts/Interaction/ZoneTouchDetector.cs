@@ -82,8 +82,12 @@ namespace RescueVR.Interaction
             // false already handles that safely.
             if (!Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, raycastLayers))
             {
+                Debug.Log($"[ZoneTouchDetector] Tap at {screenPosition} hit nothing.");
                 return;
             }
+
+            Debug.Log($"[ZoneTouchDetector] Tap at {screenPosition} hit '{hit.collider.name}' " +
+                      $"(tag: '{hit.collider.tag}').");
 
             string zoneName = MapTagToZoneName(hit.collider.tag);
             if (zoneName == null)
@@ -92,7 +96,15 @@ namespace RescueVR.Interaction
                 return;
             }
 
-            RescueManager.Instance?.ZoneTouched(zoneName);
+            if (RescueManager.Instance == null)
+            {
+                Debug.LogWarning("[ZoneTouchDetector] Hit a valid zone, but no RescueManager " +
+                    "exists in the scene to report it to.");
+                return;
+            }
+
+            RescueManager.Instance.ZoneTouched(zoneName);
+            Debug.Log($"[ZoneTouchDetector] Reported '{zoneName}' to RescueManager.");
         }
 
         private static string MapTagToZoneName(string colliderTag)
