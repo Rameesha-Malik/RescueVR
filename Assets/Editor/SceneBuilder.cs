@@ -256,6 +256,8 @@ namespace RescueVR.EditorTools
             Button button = buttonGo.GetComponent<Button>();
 
             Text buttonLabel = CreateText("Text", buttonGo.transform, "Lift Patient");
+            buttonLabel.color = Color.black; // the button's Image background defaults to white —
+                                              // white label text on it would be invisible
             RectTransform labelRect = buttonLabel.rectTransform;
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;
