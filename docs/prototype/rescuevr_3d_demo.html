@@ -1,0 +1,415 @@
+<title>RescueVR 3D Walkthrough</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+<style>
+  :root{
+    --bg:#050506;
+    --ground:#0c0d0f;
+    --grid-line:#173b36;
+    --car-top:#a3db4c;
+    --car-side:#7fb038;
+    --car-front:#6a9530;
+    --car-glass:#20241d;
+    --wheel:#0a0a0b;
+    --wheel-rim:#3a3a3d;
+    --char:#d3d5d8;
+    --char-shadow:#9a9da1;
+    --text:#ffffff;
+    --muted:#8a8d92;
+    --success:#3ddc84;
+    --fail:#ff4d4f;
+    --zone-pulse:#ff5b5b;
+    --zone-breathing:#4fc8ff;
+    --zone-neck:#ffe14f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Inter",Arial,Helvetica,sans-serif;
+    overflow:hidden;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  ::selection{background:var(--zone-neck);color:#1a1300;}
+
+  .viewport{
+    position:relative;
+    width:100vw;
+    height:100vh;
+    perspective:1100px;
+    perspective-origin:50% 42%;
+    cursor:grab;
+  }
+  .viewport.dragging{ cursor:grabbing; }
+
+  .world{
+    position:absolute;
+    left:50%; top:58%;
+    width:0; height:0;
+    transform-style:preserve-3d;
+    transform:rotateX(-58deg) rotateZ(24deg) translateZ(0);
+    transition:transform .05s linear;
+  }
+
+  /* ---------- Ground ---------- */
+  .ground{
+    position:absolute;
+    width:1400px; height:1400px;
+    left:-700px; top:-700px;
+    transform-style:preserve-3d;
+    background:
+      linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0/56px 56px,
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0/56px 56px,
+      var(--ground);
+    -webkit-mask-image:radial-gradient(circle at 50% 50%, black 30%, transparent 68%);
+            mask-image:radial-gradient(circle at 50% 50%, black 30%, transparent 68%);
+  }
+
+  /* ---------- Generic 3D box built from 6 faces ---------- */
+  .box{ position:absolute; transform-style:preserve-3d; }
+  .face{ position:absolute; }
+
+  /* ---------- Car ---------- */
+  .car{ position:absolute; transform-style:preserve-3d; transform:translate3d(-10px,-40px,0) rotateZ(-8deg); }
+  .car .body-top{ width:280px; height:130px; margin:-65px 0 0 -140px; background:var(--car-top); transform:rotateX(90deg) translateZ(58px); }
+  .car .body-front{ width:280px; height:58px; margin:0 0 0 -140px; background:var(--car-front); transform:translateZ(65px); }
+  .car .body-back{ width:280px; height:58px; margin:0 0 0 -140px; background:var(--car-front); transform:translateZ(-65px) rotateY(180deg); }
+  .car .body-left{ width:130px; height:58px; margin:0 0 0 -65px; background:var(--car-side); transform:rotateY(90deg) translateZ(140px); }
+  .car .body-right{ width:130px; height:58px; margin:0 0 0 -65px; background:var(--car-side); transform:rotateY(-90deg) translateZ(140px); }
+  .car .body-bottom{ width:280px; height:130px; margin:-65px 0 0 -140px; background:#141a10; transform:rotateX(90deg); }
+
+  .car .cabin-top{ width:150px; height:120px; margin:-60px 0 0 -75px; background:var(--car-top); transform:rotateX(90deg) translateZ(108px) translateY(-6px); }
+  .car .cabin-glass-f{ width:150px; height:52px; margin:0 0 0 -75px; background:var(--car-glass); transform:translateZ(64.9px) translateY(-40px) rotateX(18deg); transform-origin:bottom; }
+  .car .cabin-glass-b{ width:150px; height:52px; margin:0 0 0 -75px; background:var(--car-glass); transform:translateZ(-64.9px) rotateY(180deg) translateY(-40px) rotateX(18deg); transform-origin:bottom; }
+  .car .cabin-l{ width:118px; height:52px; margin:0 0 0 -59px; background:var(--car-side); transform:rotateY(90deg) translateZ(75px) translateY(-40px); }
+  .car .cabin-r{ width:118px; height:52px; margin:0 0 0 -59px; background:var(--car-side); transform:rotateY(-90deg) translateZ(75px) translateY(-40px); }
+
+  .wheel{ position:absolute; width:56px; height:56px; margin:-28px 0 0 -28px; border-radius:50%; background:var(--wheel); border:5px solid var(--wheel-rim); transform:rotateY(90deg); }
+  .wheel::after{ content:""; position:absolute; inset:14px; border-radius:50%; background:#242427; }
+  .w-fl{ transform:translate3d(-100px,66px,72px) rotateY(90deg); }
+  .w-fr{ transform:translate3d(100px,66px,72px) rotateY(90deg); }
+  .w-bl{ transform:translate3d(-100px,66px,-72px) rotateY(90deg); }
+  .w-br{ transform:translate3d(100px,66px,-72px) rotateY(90deg); }
+  .strut{ position:absolute; width:6px; height:34px; margin:0 0 0 -3px; background:#2a2a2c; }
+  .strut-l{ transform:translate3d(-96px,34px,68px) rotateZ(-18deg); }
+  .strut-r{ transform:translate3d(96px,34px,68px) rotateZ(18deg); }
+
+  /* ---------- Character (blocky, lying down) ---------- */
+  .victim{ position:absolute; transform-style:preserve-3d; transform:translate3d(120px,-14px,10px) rotateZ(18deg); }
+  .v-part{ position:absolute; border-radius:10px; background:var(--char); box-shadow:inset 0 -6px 10px rgba(0,0,0,0.25); }
+  .v-torso{ width:120px; height:38px; margin:-19px 0 0 -60px; transform:translateZ(19px); }
+  .v-torso-top{ width:120px; height:38px; margin:-19px 0 0 -60px; background:var(--char-shadow); transform:rotateX(90deg) translateZ(19px); border-radius:10px; }
+  .v-head{ width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; background:var(--char); transform:translate3d(-78px,0,17px); }
+  .v-arm{ width:56px; height:16px; margin:-8px 0 0 -28px; background:var(--char-shadow); transform:translateZ(19px); border-radius:8px; }
+  .v-arm-1{ transform:translate3d(20px,-30px,19px) rotateZ(-24deg); }
+  .v-arm-2{ transform:translate3d(46px,26px,19px) rotateZ(20deg); }
+  .v-leg{ width:64px; height:18px; margin:-9px 0 0 -32px; background:var(--char); border-radius:9px; }
+  .v-leg-1{ transform:translate3d(96px,-16px,18px) rotateZ(-8deg); }
+  .v-leg-2{ transform:translate3d(96px,16px,18px) rotateZ(8deg); }
+
+  /* ---------- Zone markers (clickable 3D spheres) ---------- */
+  .zone{
+    position:absolute;
+    width:26px; height:26px;
+    margin:-13px 0 0 -13px;
+    border-radius:50%;
+    cursor:pointer;
+    box-shadow:0 0 0 0 rgba(255,255,255,0.0);
+    transition:transform .15s ease, opacity .2s ease, box-shadow .3s ease;
+  }
+  .zone::after{
+    content:"";
+    position:absolute; inset:4px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.35);
+  }
+  .zone.done{ opacity:0.3; transform:scale(0.65) translateZ(var(--zone-tz,0)); }
+  .zone-pulse{ background:var(--zone-pulse); transform:translate3d(150px,-24px,32px); animation:zonePulse 1.8s ease-in-out infinite; }
+  .zone-breathing{ background:var(--zone-breathing); transform:translate3d(160px,4px,-2px); animation:zonePulse 1.8s ease-in-out infinite .2s; }
+  .zone-neck{ background:var(--zone-neck); transform:translate3d(56px,-2px,26px); animation:zonePulse 1.8s ease-in-out infinite .4s; }
+  @keyframes zonePulse{ 0%,100%{ filter:brightness(1); } 50%{ filter:brightness(1.35); } }
+  @media (prefers-reduced-motion: reduce){ .zone{ animation:none !important; } }
+
+  /* ---------- HUD (flat overlay, not part of the 3D world) ---------- */
+  .hud{
+    position:fixed; inset:0;
+    pointer-events:none;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .hud-top{
+    margin-top:34px;
+    text-align:center;
+    padding:0 24px;
+  }
+  .eyebrow{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .prompt{
+    font-size:clamp(18px,3vw,26px);
+    font-weight:700;
+    text-wrap:balance;
+    transition:opacity .2s ease;
+  }
+  .hint{
+    margin-top:8px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+
+  .lift-btn{
+    pointer-events:auto;
+    position:fixed;
+    left:50%; bottom:40px;
+    transform:translateX(-50%);
+    background:#ffffff;
+    color:#0a0a0a;
+    font-family:"Inter",Arial,sans-serif;
+    font-weight:800;
+    font-size:16px;
+    padding:14px 34px;
+    border:none;
+    border-radius:3px;
+    cursor:pointer;
+    letter-spacing:0.01em;
+    box-shadow:0 0 0 0 rgba(255,255,255,0);
+    transition:box-shadow .3s ease, transform .12s ease;
+  }
+  .lift-btn:active{ transform:translateX(-50%) scale(0.96); }
+  .lift-btn.glow{ box-shadow:0 0 0 7px rgba(255,255,255,0.14); }
+
+  .progress{
+    pointer-events:none;
+    position:fixed;
+    bottom:96px; left:50%;
+    transform:translateX(-50%);
+    display:flex; gap:8px;
+  }
+  .seg{ width:34px; height:4px; border-radius:2px; background:#26272a; overflow:hidden; }
+  .seg .fill{ height:100%; width:0%; background:#fff; transition:width .25s ease; }
+  .seg.active .fill{ width:100%; }
+
+  .result{
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0);
+    opacity:0; pointer-events:none;
+    transition:opacity .3s ease, background .3s ease;
+  }
+  .result.show{ opacity:1; background:rgba(0,0,0,0.6); pointer-events:auto; }
+  .result-card{ text-align:center; padding:0 24px; }
+  .result-text{ font-size:clamp(22px,4.4vw,34px); font-weight:800; text-wrap:balance; }
+  .result.success .result-text{ color:var(--success); }
+  .result.fail .result-text{ color:var(--fail); }
+  .retry{
+    margin-top:16px;
+    background:transparent;
+    border:1.5px solid #34363a;
+    color:#fff;
+    font-family:"Inter",Arial,sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:10px 22px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .retry:hover{ border-color:#666; }
+
+  .orbit-hint{
+    position:fixed;
+    top:16px; right:18px;
+    font-size:11px;
+    color:var(--muted);
+    text-align:right;
+    line-height:1.6;
+  }
+</style>
+
+<div class="viewport" id="viewport">
+  <div class="world" id="world">
+    <div class="ground"></div>
+
+    <div class="car">
+      <div class="face body-top"></div>
+      <div class="face body-front"></div>
+      <div class="face body-back"></div>
+      <div class="face body-left"></div>
+      <div class="face body-right"></div>
+      <div class="face body-bottom"></div>
+      <div class="face cabin-top"></div>
+      <div class="face cabin-glass-f"></div>
+      <div class="face cabin-glass-b"></div>
+      <div class="face cabin-l"></div>
+      <div class="face cabin-r"></div>
+      <div class="wheel w-fl"></div>
+      <div class="wheel w-fr"></div>
+      <div class="wheel w-bl"></div>
+      <div class="wheel w-br"></div>
+      <div class="strut strut-l"></div>
+      <div class="strut strut-r"></div>
+    </div>
+
+    <div class="victim">
+      <div class="v-part v-torso-top"></div>
+      <div class="v-part v-torso"></div>
+      <div class="v-part v-head"></div>
+      <div class="v-part v-arm v-arm-1"></div>
+      <div class="v-part v-arm v-arm-2"></div>
+      <div class="v-part v-leg v-leg-1"></div>
+      <div class="v-part v-leg v-leg-2"></div>
+    </div>
+
+    <div class="zone zone-pulse" id="zone-pulse" data-zone="pulse"></div>
+    <div class="zone zone-breathing" id="zone-breathing" data-zone="breathing"></div>
+    <div class="zone zone-neck" id="zone-neck" data-zone="neck"></div>
+  </div>
+</div>
+
+<div class="hud">
+  <div class="hud-top">
+    <div class="eyebrow">RescueVR &middot; AR Sequence</div>
+    <div class="prompt" id="prompt">Check the victim's pulse.</div>
+    <div class="hint">Drag to orbit &middot; click a colored zone in order</div>
+  </div>
+</div>
+
+<div class="orbit-hint">Drag: rotate<br>Scroll: zoom</div>
+
+<div class="progress">
+  <div class="seg" id="seg-pulse"><div class="fill"></div></div>
+  <div class="seg" id="seg-breathing"><div class="fill"></div></div>
+  <div class="seg" id="seg-neck"><div class="fill"></div></div>
+  <div class="seg" id="seg-lift"><div class="fill"></div></div>
+</div>
+
+<button class="lift-btn" id="liftBtn">Lift Patient</button>
+
+<div class="result" id="result">
+  <div class="result-card">
+    <div class="result-text" id="resultText"></div>
+    <button class="retry" id="retryBtn">Restart sequence</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var viewport = document.getElementById('viewport');
+  var world = document.getElementById('world');
+  var prompt = document.getElementById('prompt');
+  var liftBtn = document.getElementById('liftBtn');
+  var result = document.getElementById('result');
+  var resultText = document.getElementById('resultText');
+  var retryBtn = document.getElementById('retryBtn');
+
+  var segs = {
+    pulse: document.getElementById('seg-pulse'),
+    breathing: document.getElementById('seg-breathing'),
+    neck: document.getElementById('seg-neck'),
+    lift: document.getElementById('seg-lift')
+  };
+
+  var state = { pulse:false, breathing:false, neck:false };
+
+  var prompts = {
+    pulse: "Check the victim's pulse.",
+    breathing: "Check the victim's breathing.",
+    neck: "Apply the neck brace.",
+    ready: "All checks complete — lift the patient."
+  };
+
+  function nextPrompt(){
+    if(!state.pulse) return prompts.pulse;
+    if(!state.breathing) return prompts.breathing;
+    if(!state.neck) return prompts.neck;
+    return prompts.ready;
+  }
+
+  function setPrompt(text){
+    prompt.style.opacity = 0;
+    setTimeout(function(){ prompt.textContent = text; prompt.style.opacity = 1; }, 150);
+  }
+
+  function zoneTouched(key){
+    if(state[key]) return;
+    state[key] = true;
+    document.getElementById('zone-' + key).classList.add('done');
+    segs[key].classList.add('active');
+    setPrompt(nextPrompt());
+    if(state.pulse && state.breathing && state.neck){
+      liftBtn.classList.add('glow');
+    }
+  }
+
+  ['pulse','breathing','neck'].forEach(function(key){
+    document.getElementById('zone-' + key).addEventListener('click', function(e){
+      e.stopPropagation();
+      zoneTouched(key);
+    });
+  });
+
+  liftBtn.addEventListener('click', function(){
+    var ok = state.pulse && state.breathing && state.neck;
+    segs.lift.classList.add('active');
+    result.className = 'result show ' + (ok ? 'success' : 'fail');
+    resultText.textContent = ok ? 'Great job! Patient stabilized.' : 'SPINAL FRACTURE — Restart';
+  });
+
+  retryBtn.addEventListener('click', function(){
+    state = { pulse:false, breathing:false, neck:false };
+    ['pulse','breathing','neck'].forEach(function(key){
+      document.getElementById('zone-' + key).classList.remove('done');
+      segs[key].classList.remove('active');
+    });
+    segs.lift.classList.remove('active');
+    liftBtn.classList.remove('glow');
+    result.className = 'result';
+    setPrompt(prompts.pulse);
+  });
+
+  /* ---- Orbit camera: drag to rotate, wheel to zoom ---- */
+  var rotX = -58, rotZ = 24, zoom = 0;
+  var dragging = false, lastX = 0, lastY = 0;
+
+  function applyTransform(){
+    world.style.transform = 'rotateX(' + rotX + 'deg) rotateZ(' + rotZ + 'deg) translateZ(' + zoom + 'px)';
+  }
+
+  viewport.addEventListener('pointerdown', function(e){
+    dragging = true;
+    lastX = e.clientX; lastY = e.clientY;
+    viewport.classList.add('dragging');
+    viewport.setPointerCapture(e.pointerId);
+  });
+  viewport.addEventListener('pointermove', function(e){
+    if(!dragging) return;
+    var dx = e.clientX - lastX;
+    var dy = e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    rotZ += dx * 0.35;
+    rotX = Math.max(-85, Math.min(-20, rotX - dy * 0.25));
+    applyTransform();
+  });
+  ['pointerup','pointercancel'].forEach(function(ev){
+    viewport.addEventListener(ev, function(){
+      dragging = false;
+      viewport.classList.remove('dragging');
+    });
+  });
+  viewport.addEventListener('wheel', function(e){
+    e.preventDefault();
+    zoom = Math.max(-260, Math.min(220, zoom - e.deltaY * 0.4));
+    applyTransform();
+  }, { passive:false });
+
+  applyTransform();
+})();
+</script>
