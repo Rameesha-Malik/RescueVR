@@ -1,0 +1,255 @@
+<title>RescueVR Pipeline</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#0b0d10;
+    --panel:#12151a;
+    --line:#262b32;
+    --text:#e8eaed;
+    --muted:#8b929c;
+    --accent:#F4A61D;
+    --success:#3ddc84;
+    --fail:#ff5b5b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"IBM Plex Sans",system-ui,sans-serif;
+    padding:40px 24px 64px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:36px;
+  }
+  .wrap{ width:100%; max-width:1180px; display:flex; flex-direction:column; gap:36px; }
+  header{ display:flex; flex-direction:column; gap:6px; }
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+  }
+  h1{
+    font-size:clamp(24px,3.4vw,32px);
+    font-weight:700;
+    margin:0;
+    text-wrap:balance;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:14.5px;
+    max-width:70ch;
+    line-height:1.6;
+    margin:0;
+  }
+
+  figure{ margin:0; display:flex; flex-direction:column; gap:14px; }
+  .diagram-panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:20px;
+    overflow-x:auto;
+  }
+  svg{ display:block; width:100%; height:auto; max-width:1140px; margin:0 auto; }
+  figcaption{
+    font-size:12.5px;
+    color:var(--muted);
+    line-height:1.6;
+    max-width:80ch;
+  }
+  figcaption code{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11.5px;
+    color:var(--accent);
+    background:rgba(244,166,29,0.08);
+    padding:1px 5px;
+    border-radius:3px;
+  }
+
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:18px;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11.5px;
+    color:var(--muted);
+  }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .swatch{ width:11px; height:11px; border-radius:2px; display:inline-block; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">RescueVR &middot; Technical Implementation</div>
+    <h1>Two pipelines, one shared decision engine</h1>
+    <p class="sub">
+      Placement (getting the car and victim into the world) and Interaction (checking pulse/
+      breathing/neck and deciding pass or fail) are separate scripts that never call each other
+      directly — both just report into <code>RescueManager</code>, the single source of truth
+      for sequence state.
+    </p>
+  </header>
+
+  <figure>
+    <div class="diagram-panel">
+      <svg viewBox="0 0 1140 260" role="img" aria-label="AR placement pipeline: a screen tap raycasts against a detected AR plane via TapToPlace.cs, which instantiates the CrashSceneGroup prefab containing the car, victim, and three tagged trigger zones.">
+        <defs>
+          <marker id="arrow1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="currentColor"/>
+          </marker>
+        </defs>
+
+        <text x="4" y="22" font-family="IBM Plex Mono, monospace" font-size="11" letter-spacing="0.08em" fill="currentColor" opacity="0.55">PLACEMENT PIPELINE — runs once, when the player taps a real surface</text>
+
+        <!-- Step 1 -->
+        <rect x="4" y="60" width="150" height="64" rx="4" fill="none" stroke="currentColor" opacity="0.5"/>
+        <text x="79" y="86" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">Screen tap</text>
+        <text x="79" y="104" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.6">Input.touchCount</text>
+
+        <line x1="154" y1="92" x2="196" y2="92" stroke="currentColor" opacity="0.6" marker-end="url(#arrow1)"/>
+        <text x="175" y="82" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.6">raycasts</text>
+
+        <!-- Step 2 -->
+        <rect x="200" y="60" width="180" height="64" rx="4" fill="none" stroke="currentColor" opacity="0.5"/>
+        <text x="290" y="86" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">ARRaycastManager</text>
+        <text x="290" y="104" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.6">against detected plane</text>
+
+        <line x1="384" y1="92" x2="426" y2="92" stroke="currentColor" opacity="0.6" marker-end="url(#arrow1)"/>
+        <text x="405" y="82" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.6">hit pose</text>
+
+        <!-- Step 3 -->
+        <rect x="430" y="52" width="200" height="80" rx="4" fill="none" stroke="var(--accent)"/>
+        <text x="530" y="76" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--accent)">TapToPlace.cs</text>
+        <text x="530" y="94" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.6">Instantiate(placementPrefab,</text>
+        <text x="530" y="108" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.6">hitPose)</text>
+
+        <line x1="634" y1="92" x2="676" y2="92" stroke="currentColor" opacity="0.6" marker-end="url(#arrow1)"/>
+        <text x="655" y="82" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.6">spawns</text>
+
+        <!-- Step 4 -->
+        <rect x="680" y="40" width="220" height="104" rx="4" fill="none" stroke="currentColor" opacity="0.5"/>
+        <text x="790" y="62" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">CrashSceneGroup prefab</text>
+        <line x1="700" y1="76" x2="880" y2="76" stroke="currentColor" opacity="0.25"/>
+        <text x="790" y="94" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.7">RegCar + environment</text>
+        <text x="790" y="110" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.7">victim + 3 tagged zones</text>
+        <text x="790" y="126" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity="0.5">(Zone_Pulse / _Breathing / _Neck)</text>
+
+        <line x1="904" y1="92" x2="946" y2="92" stroke="currentColor" opacity="0.6" marker-end="url(#arrow1)"/>
+
+        <!-- Step 5 -->
+        <rect x="950" y="60" width="186" height="64" rx="4" fill="none" stroke="currentColor" stroke-dasharray="3 3" opacity="0.5"/>
+        <text x="1043" y="86" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor" opacity="0.85">Feeds the</text>
+        <text x="1043" y="103" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor" opacity="0.85">Interaction pipeline ↓</text>
+      </svg>
+    </div>
+    <figcaption>
+      Once placed, the zone tags (<code>Zone_Pulse</code>, <code>Zone_Breathing</code>, <code>Zone_Neck</code>)
+      on the spawned victim are what the Interaction pipeline below looks for — this is the entire
+      hand-off between the two systems.
+    </figcaption>
+  </figure>
+
+  <figure>
+    <div class="diagram-panel">
+      <svg viewBox="0 0 1140 460" role="img" aria-label="Interaction pipeline: a screen tap is raycast by ZoneTouchDetector, which reports a matched zone tag to the RescueManager singleton, which updates its three boolean flags and fires events consumed by RescueUIController. A separate Lift Patient tap calls AttemptLift, which branches to a success or spinal fracture fail result based on those same three flags.">
+        <defs>
+          <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="currentColor"/>
+          </marker>
+        </defs>
+
+        <text x="4" y="22" font-family="IBM Plex Mono, monospace" font-size="11" letter-spacing="0.08em" fill="currentColor" opacity="0.55">INTERACTION PIPELINE — runs on every tap, for the life of the scene</text>
+
+        <!-- Zone tap path -->
+        <rect x="4" y="52" width="150" height="60" rx="4" fill="none" stroke="currentColor" opacity="0.5"/>
+        <text x="79" y="76" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">Tap on a zone</text>
+        <text x="79" y="94" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.6">on the victim</text>
+
+        <line x1="154" y1="82" x2="196" y2="82" stroke="currentColor" opacity="0.6" marker-end="url(#arrow2)"/>
+
+        <rect x="200" y="40" width="210" height="84" rx="4" fill="none" stroke="var(--accent)"/>
+        <text x="305" y="64" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--accent)">ZoneTouchDetector.cs</text>
+        <text x="305" y="82" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.6">Physics.Raycast(ray)</text>
+        <text x="305" y="97" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.6">→ hit.collider.tag</text>
+        <text x="305" y="112" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9" fill="currentColor" opacity="0.45">no match → silently ignored</text>
+
+        <line x1="414" y1="82" x2="456" y2="82" stroke="currentColor" opacity="0.6" marker-end="url(#arrow2)"/>
+        <text x="435" y="72" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity="0.6">ZoneTouched("Pulse")</text>
+
+        <!-- RescueManager (central) -->
+        <rect x="460" y="20" width="220" height="130" rx="4" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <text x="570" y="44" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">RescueManager</text>
+        <text x="570" y="60" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity="0.5">(singleton)</text>
+        <line x1="480" y1="70" x2="660" y2="70" stroke="currentColor" opacity="0.25"/>
+        <text x="570" y="88" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.75">pulseChecked</text>
+        <text x="570" y="104" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.75">breathingChecked</text>
+        <text x="570" y="120" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.75">neckBraced</text>
+        <text x="570" y="140" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9" fill="currentColor" opacity="0.5">3 booleans, nothing more</text>
+
+        <!-- Lift button path (below, converging) -->
+        <rect x="4" y="180" width="150" height="60" rx="4" fill="none" stroke="currentColor" opacity="0.5"/>
+        <text x="79" y="204" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">Tap "Lift</text>
+        <text x="79" y="220" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">Patient"</text>
+
+        <path d="M154,210 C300,210 300,150 456,90" fill="none" stroke="currentColor" opacity="0.6" marker-end="url(#arrow2)"/>
+        <text x="300" y="200" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity="0.6">AttemptLift()</text>
+
+        <!-- Branch down to success/fail -->
+        <line x1="570" y1="150" x2="570" y2="200" stroke="currentColor" opacity="0.6" marker-end="url(#arrow2)"/>
+        <text x="586" y="180" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity="0.6">checks all 3 flags</text>
+
+        <path d="M570,204 L400,240" fill="none" stroke="var(--success)" marker-end="url(#arrow2)"/>
+        <path d="M570,204 L740,240" fill="none" stroke="var(--fail)" marker-end="url(#arrow2)"/>
+
+        <rect x="290" y="244" width="220" height="60" rx="4" fill="none" stroke="var(--success)"/>
+        <text x="400" y="268" text-anchor="middle" font-size="12" font-weight="700" fill="var(--success)">all true → Success</text>
+        <text x="400" y="286" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--success)" opacity="0.85">"Patient stabilized."</text>
+
+        <rect x="630" y="244" width="230" height="60" rx="4" fill="none" stroke="var(--fail)"/>
+        <text x="745" y="268" text-anchor="middle" font-size="12" font-weight="700" fill="var(--fail)">any false → Fail</text>
+        <text x="745" y="286" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--fail)" opacity="0.85">"SPINAL FRACTURE — Restart"</text>
+
+        <!-- Events out to UI -->
+        <line x1="680" y1="60" x2="900" y2="60" stroke="currentColor" opacity="0.6" marker-end="url(#arrow2)"/>
+        <text x="790" y="50" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity="0.6">OnStepPromptChanged / OnResult</text>
+
+        <rect x="904" y="30" width="220" height="80" rx="4" fill="none" stroke="currentColor" opacity="0.5"/>
+        <text x="1014" y="54" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">RescueUIController</text>
+        <text x="1014" y="72" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.6">subscribes in OnEnable()</text>
+        <text x="1014" y="88" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.6">writes to on-screen Text</text>
+
+        <line x1="1014" y1="110" x2="1014" y2="150" stroke="currentColor" opacity="0.6" marker-end="url(#arrow2)"/>
+
+        <rect x="909" y="154" width="210" height="150" rx="4" fill="none" stroke="currentColor" opacity="0.35"/>
+        <text x="1014" y="178" text-anchor="middle" font-size="11.5" font-weight="600" fill="currentColor" opacity="0.85">On screen</text>
+        <line x1="924" y1="188" x2="1104" y2="188" stroke="currentColor" opacity="0.2"/>
+        <text x="1014" y="210" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.7">"Check the victim's</text>
+        <text x="1014" y="224" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.7">pulse."</text>
+        <text x="1014" y="252" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--success)" opacity="0.9">"Great job! Patient</text>
+        <text x="1014" y="266" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--success)" opacity="0.9">stabilized."</text>
+        <text x="1014" y="288" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--fail)" opacity="0.9">"SPINAL FRACTURE —</text>
+        <text x="1014" y="300" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--fail)" opacity="0.9">Restart"</text>
+
+        <text x="4" y="440" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.45">Zone name string contract: "Pulse" / "Breathing" / "Neck" — must match exactly on both the tag-mapping side and RescueManager.ZoneTouched(), or the tap is silently dropped.</text>
+      </svg>
+    </div>
+    <figcaption>
+      <code>RescueManager</code> never reads a collider or a tag itself — it only ever receives a
+      plain string (<code>"Pulse"</code>, <code>"Breathing"</code>, <code>"Neck"</code>) and only
+      ever emits events. That's what lets the same manager work whether the tap came from
+      <code>ZoneTouchDetector</code> (phone AR) or, later, a VR controller trigger — it doesn't
+      know or care which.
+    </figcaption>
+  </figure>
+
+  <div class="legend">
+    <span><span class="swatch" style="background:var(--accent)"></span>Component we wrote</span>
+    <span><span class="swatch" style="background:var(--success)"></span>Success branch</span>
+    <span><span class="swatch" style="background:var(--fail)"></span>Fail branch</span>
+    <span><span class="swatch" style="border:1px dashed currentColor;background:transparent"></span>Unity / AR Foundation built-in</span>
+  </div>
+</div>
