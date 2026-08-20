@@ -98,6 +98,75 @@ namespace RescueVR.EditorTools
             return null;
         }
 
+        /// <summary>
+        /// Adds Pair B's logic (RescueManager, ZoneTouchDetector, and the feedback UI) into
+        /// whichever scene is CURRENTLY OPEN — unlike the two builders above, this does NOT
+        /// create a new scene or delete anything. Use this on PairA_ARTestScene once its car,
+        /// character, and tagged zones are already in place, to wire up the missing gameplay
+        /// logic without disturbing that work. Safe to run more than once — skips anything
+        /// that's already present instead of duplicating it.
+        ///
+        /// Unlike BuildTouchDetector() (used by the standalone Pair B scene), this does NOT
+        /// move or reposition Camera.main — in an AR scene the camera's transform is driven by
+        /// real-world tracking at runtime, and forcibly repositioning it here would break that.
+        /// </summary>
+        [MenuItem("RescueVR/Add Pair B Logic To Current Scene")]
+        public static void AddPairBLogicToCurrentScene()
+        {
+            var scene = EditorSceneManager.GetActiveScene();
+
+            if (Object.FindObjectOfType<RescueManager>() == null)
+            {
+                BuildRescueManager();
+                Debug.Log("[SceneBuilder] Added RescueManager.");
+            }
+            else
+            {
+                Debug.Log("[SceneBuilder] RescueManager already present — skipped.");
+            }
+
+            if (Object.FindObjectOfType<ZoneTouchDetector>() == null)
+            {
+                AttachTouchDetectorToMainCameraInPlace();
+            }
+            else
+            {
+                Debug.Log("[SceneBuilder] ZoneTouchDetector already present — skipped.");
+            }
+
+            if (Object.FindObjectOfType<RescueUIController>() == null)
+            {
+                BuildUI();
+                Debug.Log("[SceneBuilder] Added feedback UI (Canvas + prompt/result text + Lift button).");
+            }
+            else
+            {
+                Debug.Log("[SceneBuilder] UI already present — skipped.");
+            }
+
+            EditorSceneManager.SaveScene(scene);
+            AssetDatabase.Refresh();
+            Debug.Log("[SceneBuilder] Pair B logic added to the current scene and saved. " +
+                      "Reminder: this only works if the tags on your character are exactly " +
+                      "Zone_Pulse / Zone_Breathing / Zone_Neck.");
+        }
+
+        /// <summary>Adds ZoneTouchDetector to whatever camera is currently tagged MainCamera,
+        /// without moving it — safe for an AR camera whose transform is driven by tracking.</summary>
+        private static void AttachTouchDetectorToMainCameraInPlace()
+        {
+            Camera cam = Camera.main;
+            if (cam == null)
+            {
+                Debug.LogError("[SceneBuilder] No camera tagged MainCamera found in this scene — " +
+                    "cannot attach ZoneTouchDetector. Make sure XR Origin's camera child is tagged " +
+                    "MainCamera.");
+                return;
+            }
+
+            cam.gameObject.AddComponent<ZoneTouchDetector>();
+        }
+
         [MenuItem("RescueVR/Build Pair B Test Scene")]
         public static void BuildPairBTestScene()
         {
