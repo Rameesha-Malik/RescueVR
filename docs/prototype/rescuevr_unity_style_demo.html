@@ -78,11 +78,74 @@
     position:absolute;
     left:2%; top:8%;
     width:62%;
+    transform:translateX(0);
+  }
+  .car.drive-in{
+    animation:carDriveIn 1.1s cubic-bezier(.25,.7,.3,1) both;
+  }
+  @keyframes carDriveIn{
+    0%{ transform:translateX(160%); }
+    72%{ transform:translateX(-4%); }
+    100%{ transform:translateX(0%); }
+  }
+  .stage.impact{ animation:impactShake .35s ease; }
+  .impact-flash{
+    position:absolute; inset:0;
+    background:#fff;
+    opacity:0;
+    pointer-events:none;
+  }
+  .impact-flash.flash{ animation:impactFlash .35s ease; }
+  @keyframes impactShake{
+    0%,100%{ transform:translate(0,0); }
+    20%{ transform:translate(-6px,2px); }
+    40%{ transform:translate(5px,-3px); }
+    60%{ transform:translate(-4px,3px); }
+    80%{ transform:translate(3px,-2px); }
+  }
+  @keyframes impactFlash{
+    0%{ opacity:0; }
+    15%{ opacity:0.85; }
+    100%{ opacity:0; }
   }
   .victim{
     position:absolute;
     right:0; bottom:6%;
     width:44%;
+    opacity:0;
+    transition:opacity .5s ease;
+  }
+  .victim.show{ opacity:1; }
+
+  .pedestrian{
+    position:absolute;
+    bottom:6%;
+    left:-8%;
+    width:26px;
+    height:52px;
+    opacity:0;
+  }
+  .pedestrian.walk{
+    animation:pedWalk 1.6s linear forwards, pedFade 1.6s linear forwards;
+  }
+  @keyframes pedWalk{
+    0%{ left:-8%; }
+    100%{ left:34%; }
+  }
+  @keyframes pedFade{
+    0%{ opacity:0; }
+    12%{ opacity:1; }
+    82%{ opacity:1; }
+    100%{ opacity:0; }
+  }
+  .ped-leg{
+    animation:pedStride .3s linear infinite;
+    transform-origin:top center;
+  }
+  .ped-leg.leg-b{ animation-delay:.15s; }
+  @keyframes pedStride{
+    0%,100%{ transform:rotate(18deg); }
+    50%{ transform:rotate(-18deg); }
   }
   .zone-dot{
     position:absolute;
@@ -168,12 +231,20 @@
   <div class="label">RescueVR &mdash; AR Sequence Preview</div>
 
   <div class="stage" id="stage">
+    <div class="impact-flash" id="impactFlash"></div>
     <div class="ground"></div>
 
-    <div class="prompt" id="prompt">Check the victim's pulse.</div>
+    <div class="prompt" id="prompt">A driver approaches the scene.</div>
+
+    <svg class="pedestrian" id="pedestrian" viewBox="0 0 26 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="13" cy="8" r="6" fill="#e8e9eb"/>
+      <rect x="8" y="15" width="10" height="20" rx="4" fill="#e8e9eb"/>
+      <rect class="ped-leg leg-a" x="9" y="33" width="4" height="17" rx="2" fill="#c7c9cc"/>
+      <rect class="ped-leg leg-b" x="14" y="33" width="4" height="17" rx="2" fill="#c7c9cc"/>
+    </svg>
 
     <div class="scene">
-      <svg class="car" viewBox="0 0 220 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg class="car" id="carSvg" viewBox="0 0 220 120" fill="none" xmlns="http://www.w3.org/2000/svg">
         <!-- flat-roofed boxy hatchback body, matching the actual model's silhouette -->
         <path d="M6 66 L14 40 Q18 30 30 29 L54 27 L150 22 Q172 22 182 34 L206 52 L206 66 Q206 72 198 72 L16 72 Q6 72 6 66 Z"
               fill="var(--car-body)" stroke="var(--car-body-dark)" stroke-width="2"/>
@@ -192,7 +263,7 @@
         <circle cx="168" cy="68" r="6" fill="#26262a"/>
       </svg>
 
-      <svg class="victim" viewBox="0 0 220 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg class="victim" id="victimSvg" viewBox="0 0 220 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <!-- elongated, sprawled pose overlapping the car's rear, matching the actual model -->
         <path d="M4 40 Q26 30 52 33 L110 40 Q140 44 168 34 Q188 27 208 30"
               stroke="var(--char)" stroke-width="15" stroke-linecap="round" fill="none"/>
@@ -224,10 +295,15 @@
 
 <script>
 (function(){
+  var stage = document.getElementById('stage');
   var prompt = document.getElementById('prompt');
   var liftBtn = document.getElementById('liftBtn');
   var result = document.getElementById('result');
   var resultText = document.getElementById('resultText');
+  var pedestrian = document.getElementById('pedestrian');
+  var carSvg = document.getElementById('carSvg');
+  var victimSvg = document.getElementById('victimSvg');
+  var impactFlash = document.getElementById('impactFlash');
   var dots = {
     pulse: document.getElementById('dot-pulse'),
     breathing: document.getElementById('dot-breathing'),
@@ -256,6 +332,41 @@
     prompt.textContent = prompts.pulse;
   }
 
+  function resetScene(){
+    resetVisual();
+    victimSvg.classList.remove('show');
+    carSvg.classList.remove('drive-in');
+    pedestrian.classList.remove('walk');
+    // Force the drive-in / walk animations to be replayable next time.
+    void carSvg.offsetWidth;
+    void pedestrian.offsetWidth;
+  }
+
+  async function playIntro(){
+    resetScene();
+    prompt.textContent = 'A driver approaches the scene.';
+
+    pedestrian.classList.add('walk');
+    await step(1700, function(){});
+
+    setPrompt('A car loses control...');
+    await step(500, function(){});
+    carSvg.classList.add('drive-in');
+    await step(950, function(){});
+
+    // Impact.
+    stage.classList.add('impact');
+    impactFlash.classList.add('flash');
+    victimSvg.classList.add('show');
+    await step(450, function(){
+      stage.classList.remove('impact');
+      impactFlash.classList.remove('flash');
+    });
+
+    setPrompt(prompts.pulse);
+    await step(600, function(){});
+  }
+
   function step(delay, fn){ return new Promise(function(res){ setTimeout(function(){ fn(); res(); }, delay); }); }
 
   function markDone(key, segKey){
@@ -274,8 +385,7 @@
   }
 
   async function playSuccessRun(){
-    resetVisual();
-    await step(1100, function(){});
+    await playIntro();
     await step(700, function(){ markDone('pulse','pulse'); setPrompt(prompts.breathing); });
     await step(1100, function(){});
     await step(700, function(){ markDone('breathing','breathing'); setPrompt(prompts.neck); });
