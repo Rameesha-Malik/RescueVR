@@ -173,21 +173,33 @@
     <div class="prompt" id="prompt">Check the victim's pulse.</div>
 
     <div class="scene">
-      <svg class="car" viewBox="0 0 220 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M8 78 L18 44 Q26 30 44 28 L142 22 Q164 22 176 40 L210 58 L210 78 Q210 86 200 86 L22 86 Q8 86 8 78 Z"
+      <svg class="car" viewBox="0 0 220 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- flat-roofed boxy hatchback body, matching the actual model's silhouette -->
+        <path d="M6 66 L14 40 Q18 30 30 29 L54 27 L150 22 Q172 22 182 34 L206 52 L206 66 Q206 72 198 72 L16 72 Q6 72 6 66 Z"
               fill="var(--car-body)" stroke="var(--car-body-dark)" stroke-width="2"/>
-        <path d="M56 32 L78 29 L84 47 L54 49 Z" fill="var(--car-glass)"/>
-        <path d="M98 26 L142 23 L152 44 L102 46 Z" fill="var(--car-glass)"/>
-        <circle cx="50" cy="84" r="14" fill="#0c0c0d" stroke="#3a3a3d" stroke-width="3"/>
-        <circle cx="172" cy="84" r="14" fill="#0c0c0d" stroke="#3a3a3d" stroke-width="3"/>
+        <!-- windshield + rear window, dark glass -->
+        <path d="M40 30 L60 28 L64 48 L36 49 Z" fill="var(--car-glass)"/>
+        <path d="M96 24 L148 22 L156 46 L100 47 Z" fill="var(--car-glass)"/>
+        <!-- roof rail accent -->
+        <path d="M30 29 L150 22" stroke="var(--car-body-dark)" stroke-width="1.5" opacity="0.7"/>
+        <!-- wheels, sitting low with visible dark struts hanging beneath the body (damaged look) -->
+        <path d="M36 66 L30 92" stroke="#2a2a2c" stroke-width="4" stroke-linecap="round"/>
+        <path d="M76 66 L68 96" stroke="#2a2a2c" stroke-width="4" stroke-linecap="round"/>
+        <path d="M150 66 L160 90" stroke="#2a2a2c" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="46" cy="68" r="17" fill="#0a0a0b" stroke="#3a3a3d" stroke-width="3"/>
+        <circle cx="46" cy="68" r="6" fill="#26262a"/>
+        <circle cx="168" cy="68" r="17" fill="#0a0a0b" stroke="#3a3a3d" stroke-width="3"/>
+        <circle cx="168" cy="68" r="6" fill="#26262a"/>
       </svg>
 
-      <svg class="victim" viewBox="0 0 200 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 58 Q30 44 54 46 L140 52 Q160 53 172 44"
-              stroke="var(--char)" stroke-width="13" stroke-linecap="round" fill="none"/>
-        <circle cx="180" cy="38" r="13" fill="var(--char)"/>
-        <path d="M60 50 L54 68" stroke="var(--char-dark)" stroke-width="10" stroke-linecap="round"/>
-        <path d="M88 52 L84 70" stroke="var(--char-dark)" stroke-width="10" stroke-linecap="round"/>
+      <svg class="victim" viewBox="0 0 220 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- elongated, sprawled pose overlapping the car's rear, matching the actual model -->
+        <path d="M4 40 Q26 30 52 33 L110 40 Q140 44 168 34 Q188 27 208 30"
+              stroke="var(--char)" stroke-width="15" stroke-linecap="round" fill="none"/>
+        <circle cx="18" cy="42" r="15" fill="var(--char)"/>
+        <path d="M70 40 L64 66" stroke="var(--char-dark)" stroke-width="11" stroke-linecap="round"/>
+        <path d="M120 42 L128 70" stroke="var(--char-dark)" stroke-width="11" stroke-linecap="round"/>
+        <path d="M170 34 L206 24" stroke="var(--char-dark)" stroke-width="9" stroke-linecap="round"/>
       </svg>
 
       <div class="zone-dot zone-pulse" id="dot-pulse"></div>
