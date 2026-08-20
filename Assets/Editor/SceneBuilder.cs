@@ -151,6 +151,48 @@ namespace RescueVR.EditorTools
                       "Zone_Pulse / Zone_Breathing / Zone_Neck.");
         }
 
+        /// <summary>
+        /// Fixes the UI text styling in whatever scene is currently open: makes the Lift
+        /// Patient button's label readable (it defaulted to white-on-white in an earlier
+        /// version of this tool) and bolds all three UI text elements for better readability
+        /// on a phone screen. Safe to run repeatedly. Use this if your scene already has the
+        /// UI built (e.g. via "Add Pair B Logic To Current Scene") and just needs restyling —
+        /// it won't rebuild anything, only adjusts existing components in place.
+        /// </summary>
+        [MenuItem("RescueVR/Fix UI Style In Current Scene")]
+        public static void FixUIStyleInCurrentScene()
+        {
+            var scene = EditorSceneManager.GetActiveScene();
+            int fixedCount = 0;
+
+            Text[] allTexts = Object.FindObjectsOfType<Text>(includeInactive: true);
+            foreach (Text text in allTexts)
+            {
+                text.fontStyle = FontStyle.Bold;
+                fixedCount++;
+
+                // The Lift button's label is the only one sitting on a light background
+                // (the button's white Image) — everything else sits on the dark AR view,
+                // so only this one needs a dark color; the others stay white.
+                if (text.transform.parent != null && text.transform.parent.name == "LiftButton")
+                {
+                    text.color = Color.black;
+                }
+            }
+
+            if (fixedCount == 0)
+            {
+                Debug.LogWarning("[SceneBuilder] No UI Text components found in this scene — " +
+                    "run 'Add Pair B Logic To Current Scene' first to build the UI.");
+                return;
+            }
+
+            EditorSceneManager.SaveScene(scene);
+            AssetDatabase.Refresh();
+            Debug.Log($"[SceneBuilder] Restyled {fixedCount} UI text element(s) (bold, Lift button " +
+                      "label set to black for readability) and saved the scene.");
+        }
+
         /// <summary>Adds ZoneTouchDetector to whatever camera is currently tagged MainCamera,
         /// without moving it — safe for an AR camera whose transform is driven by tracking.</summary>
         private static void AttachTouchDetectorToMainCameraInPlace()
