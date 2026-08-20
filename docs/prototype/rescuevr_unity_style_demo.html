@@ -1,0 +1,305 @@
+<title>RescueVR Sequence</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+<style>
+  :root{
+    --bg:#050506;
+    --ground-line:#2fb8a8;
+    --car-body:#8ec73f;
+    --car-body-dark:#5f8f24;
+    --car-glass:#2a2f26;
+    --char:#c7c9cc;
+    --char-dark:#8f9296;
+    --text:#ffffff;
+    --success:#3ddc84;
+    --fail:#ff4d4f;
+    --btn-bg:#ffffff;
+    --btn-text:#0a0a0a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Inter",Arial,Helvetica,sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px;
+  }
+  .stage-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+  .label{
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:#6b6e73;
+  }
+  .stage{
+    position:relative;
+    width:min(90vw,760px);
+    aspect-ratio:16/9;
+    background:var(--bg);
+    overflow:hidden;
+    border-radius:4px;
+  }
+  .ground{
+    position:absolute;
+    left:0; right:0;
+    top:64%;
+    height:1px;
+    background:var(--ground-line);
+    opacity:0.9;
+  }
+  .prompt{
+    position:absolute;
+    top:14%;
+    left:0; right:0;
+    text-align:center;
+    font-size:clamp(18px,3.4vw,26px);
+    font-weight:700;
+    padding:0 20px;
+    text-wrap:balance;
+    transition:opacity .25s ease;
+  }
+  .scene{
+    position:absolute;
+    left:50%; top:52%;
+    transform:translate(-50%,-50%);
+    width:82%;
+    height:52%;
+  }
+  .car{
+    position:absolute;
+    left:2%; top:8%;
+    width:62%;
+  }
+  .victim{
+    position:absolute;
+    right:0; bottom:6%;
+    width:44%;
+  }
+  .zone-dot{
+    position:absolute;
+    width:14px;height:14px;
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    opacity:0.95;
+    transition:transform .18s ease, opacity .18s ease;
+  }
+  .zone-dot.done{ opacity:0.35; transform:translate(-50%,-50%) scale(0.7); }
+  .zone-pulse{ background:#ff5b5b; right:16%; top:18%; }
+  .zone-breathing{ background:#4fc8ff; right:9%; top:9%; }
+  .zone-neck{ background:#ffe14f; right:2%; top:0%; }
+
+  .btn{
+    position:absolute;
+    left:50%; bottom:12%;
+    transform:translateX(-50%);
+    background:var(--btn-bg);
+    color:var(--btn-text);
+    font-family:"Inter",Arial,sans-serif;
+    font-weight:800;
+    font-size:clamp(14px,2.2vw,18px);
+    padding:12px 28px;
+    border-radius:2px;
+    letter-spacing:0.01em;
+    box-shadow:0 0 0 0 rgba(255,255,255,0);
+    transition:box-shadow .3s ease, transform .15s ease;
+  }
+  .btn.pressed{ transform:translateX(-50%) scale(0.94); }
+  .btn.glow{ box-shadow:0 0 0 6px rgba(255,255,255,0.12); }
+
+  .result{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,0);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .3s ease, background .3s ease;
+  }
+  .result.show{
+    opacity:1;
+    background:rgba(0,0,0,0.55);
+  }
+  .result-text{
+    font-size:clamp(20px,4vw,32px);
+    font-weight:800;
+    letter-spacing:0.01em;
+    text-align:center;
+    padding:0 20px;
+    text-wrap:balance;
+  }
+  .result.success .result-text{ color:var(--success); }
+  .result.fail .result-text{ color:var(--fail); }
+
+  .progress{
+    display:flex;
+    gap:8px;
+  }
+  .progress .seg{
+    width:34px; height:4px;
+    background:#26272a;
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .progress .seg .fill{
+    height:100%; width:0%;
+    background:#ffffff;
+    transition:width .2s linear;
+  }
+  .progress .seg.active .fill{ width:100%; }
+  .progress .seg.pending .fill{ width:0%; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+
+<div class="stage-wrap">
+  <div class="label">RescueVR &mdash; AR Sequence Preview</div>
+
+  <div class="stage" id="stage">
+    <div class="ground"></div>
+
+    <div class="prompt" id="prompt">Check the victim's pulse.</div>
+
+    <div class="scene">
+      <svg class="car" viewBox="0 0 220 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 78 L18 44 Q26 30 44 28 L142 22 Q164 22 176 40 L210 58 L210 78 Q210 86 200 86 L22 86 Q8 86 8 78 Z"
+              fill="var(--car-body)" stroke="var(--car-body-dark)" stroke-width="2"/>
+        <path d="M56 32 L78 29 L84 47 L54 49 Z" fill="var(--car-glass)"/>
+        <path d="M98 26 L142 23 L152 44 L102 46 Z" fill="var(--car-glass)"/>
+        <circle cx="50" cy="84" r="14" fill="#0c0c0d" stroke="#3a3a3d" stroke-width="3"/>
+        <circle cx="172" cy="84" r="14" fill="#0c0c0d" stroke="#3a3a3d" stroke-width="3"/>
+      </svg>
+
+      <svg class="victim" viewBox="0 0 200 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 58 Q30 44 54 46 L140 52 Q160 53 172 44"
+              stroke="var(--char)" stroke-width="13" stroke-linecap="round" fill="none"/>
+        <circle cx="180" cy="38" r="13" fill="var(--char)"/>
+        <path d="M60 50 L54 68" stroke="var(--char-dark)" stroke-width="10" stroke-linecap="round"/>
+        <path d="M88 52 L84 70" stroke="var(--char-dark)" stroke-width="10" stroke-linecap="round"/>
+      </svg>
+
+      <div class="zone-dot zone-pulse" id="dot-pulse"></div>
+      <div class="zone-dot zone-breathing" id="dot-breathing"></div>
+      <div class="zone-dot zone-neck" id="dot-neck"></div>
+    </div>
+
+    <button class="btn" id="liftBtn">Lift Patient</button>
+
+    <div class="result" id="result">
+      <div class="result-text" id="resultText"></div>
+    </div>
+  </div>
+
+  <div class="progress">
+    <div class="seg" id="seg-pulse"><div class="fill"></div></div>
+    <div class="seg" id="seg-breathing"><div class="fill"></div></div>
+    <div class="seg" id="seg-neck"><div class="fill"></div></div>
+    <div class="seg" id="seg-lift"><div class="fill"></div></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var prompt = document.getElementById('prompt');
+  var liftBtn = document.getElementById('liftBtn');
+  var result = document.getElementById('result');
+  var resultText = document.getElementById('resultText');
+  var dots = {
+    pulse: document.getElementById('dot-pulse'),
+    breathing: document.getElementById('dot-breathing'),
+    neck: document.getElementById('dot-neck')
+  };
+  var segs = {
+    pulse: document.getElementById('seg-pulse'),
+    breathing: document.getElementById('seg-breathing'),
+    neck: document.getElementById('seg-neck'),
+    lift: document.getElementById('seg-lift')
+  };
+
+  var prompts = {
+    pulse: "Check the victim's pulse.",
+    breathing: "Check the victim's breathing.",
+    neck: "Apply the neck brace.",
+    ready: "All checks complete — lift the patient."
+  };
+
+  function resetVisual(){
+    Object.values(dots).forEach(function(d){ d.classList.remove('done'); });
+    Object.values(segs).forEach(function(s){ s.classList.remove('active'); });
+    result.className = 'result';
+    liftBtn.classList.remove('glow','pressed');
+    prompt.style.opacity = 1;
+    prompt.textContent = prompts.pulse;
+  }
+
+  function step(delay, fn){ return new Promise(function(res){ setTimeout(function(){ fn(); res(); }, delay); }); }
+
+  function markDone(key, segKey){
+    dots[key].classList.add('done');
+    segs[segKey].classList.add('active');
+  }
+
+  function setPrompt(text){
+    prompt.style.opacity = 0;
+    setTimeout(function(){ prompt.textContent = text; prompt.style.opacity = 1; }, 180);
+  }
+
+  function pressLift(){
+    liftBtn.classList.add('pressed');
+    setTimeout(function(){ liftBtn.classList.remove('pressed'); }, 160);
+  }
+
+  async function playSuccessRun(){
+    resetVisual();
+    await step(1100, function(){});
+    await step(700, function(){ markDone('pulse','pulse'); setPrompt(prompts.breathing); });
+    await step(1100, function(){});
+    await step(700, function(){ markDone('breathing','breathing'); setPrompt(prompts.neck); });
+    await step(1100, function(){});
+    await step(700, function(){ markDone('neck','neck'); setPrompt(prompts.ready); liftBtn.classList.add('glow'); });
+    await step(1000, function(){});
+    await step(500, function(){
+      pressLift();
+      segs.lift.classList.add('active');
+      result.className = 'result show success';
+      resultText.textContent = 'Great job! Patient stabilized.';
+    });
+    await step(2200, function(){});
+  }
+
+  async function playFailRun(){
+    resetVisual();
+    await step(1000, function(){});
+    await step(700, function(){ markDone('pulse','pulse'); setPrompt(prompts.breathing); });
+    await step(1300, function(){});
+    await step(500, function(){
+      pressLift();
+      result.className = 'result show fail';
+      resultText.textContent = 'SPINAL FRACTURE — Restart';
+    });
+    await step(2200, function(){});
+  }
+
+  async function loop(){
+    /* eslint-disable no-constant-condition */
+    while(true){
+      await playSuccessRun();
+      await playFailRun();
+    }
+  }
+
+  loop();
+})();
+</script>
