@@ -11,8 +11,14 @@
     --car-glass:#20241d;
     --wheel:#0a0a0b;
     --wheel-rim:#3a3a3d;
-    --char:#d3d5d8;
-    --char-shadow:#9a9da1;
+    --skin:#e0b088;
+    --skin-shadow:#c08e64;
+    --shirt:#3a5a7a;
+    --shirt-shadow:#2a4258;
+    --pants:#2b2d33;
+    --pants-shadow:#1c1d21;
+    --shoe:#151517;
+    --headlight:#e8f4c8;
     --text:#ffffff;
     --muted:#8a8d92;
     --success:#3ddc84;
@@ -85,46 +91,72 @@
   .car .cabin-l{ width:118px; height:52px; margin:0 0 0 -59px; background:var(--car-side); transform:rotateY(90deg) translateZ(75px) translateY(-40px); }
   .car .cabin-r{ width:118px; height:52px; margin:0 0 0 -59px; background:var(--car-side); transform:rotateY(-90deg) translateZ(75px) translateY(-40px); }
 
-  .wheel{ position:absolute; width:56px; height:56px; margin:-28px 0 0 -28px; border-radius:50%; background:var(--wheel); border:5px solid var(--wheel-rim); transform:rotateY(90deg); }
-  .wheel::after{ content:""; position:absolute; inset:14px; border-radius:50%; background:#242427; }
-  .w-fl{ transform:translate3d(-100px,66px,72px) rotateY(90deg); }
-  .w-fr{ transform:translate3d(100px,66px,72px) rotateY(90deg); }
-  .w-bl{ transform:translate3d(-100px,66px,-72px) rotateY(90deg); }
-  .w-br{ transform:translate3d(100px,66px,-72px) rotateY(90deg); }
-  .strut{ position:absolute; width:6px; height:34px; margin:0 0 0 -3px; background:#2a2a2c; }
-  .strut-l{ transform:translate3d(-96px,34px,68px) rotateZ(-18deg); }
-  .strut-r{ transform:translate3d(96px,34px,68px) rotateZ(18deg); }
+  .headlight{ position:absolute; width:26px; height:16px; margin:-8px 0 0 -13px; background:var(--headlight); border-radius:3px; box-shadow:0 0 14px 2px rgba(232,244,200,0.5); }
+  .hl-l{ transform:translate3d(-90px,10px,140.5px); }
+  .hl-r{ transform:translate3d(90px,10px,140.5px); }
 
-  /* ---------- Character (blocky, lying down) ---------- */
-  .victim{ position:absolute; transform-style:preserve-3d; transform:translate3d(120px,-14px,10px) rotateZ(18deg); }
-  .v-part{ position:absolute; border-radius:10px; background:var(--char); box-shadow:inset 0 -6px 10px rgba(0,0,0,0.25); }
-  .v-torso{ width:120px; height:38px; margin:-19px 0 0 -60px; transform:translateZ(19px); }
-  .v-torso-top{ width:120px; height:38px; margin:-19px 0 0 -60px; background:var(--char-shadow); transform:rotateX(90deg) translateZ(19px); border-radius:10px; }
-  .v-head{ width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; background:var(--char); transform:translate3d(-78px,0,17px); }
-  .v-arm{ width:56px; height:16px; margin:-8px 0 0 -28px; background:var(--char-shadow); transform:translateZ(19px); border-radius:8px; }
-  .v-arm-1{ transform:translate3d(20px,-30px,19px) rotateZ(-24deg); }
-  .v-arm-2{ transform:translate3d(46px,26px,19px) rotateZ(20deg); }
-  .v-leg{ width:64px; height:18px; margin:-9px 0 0 -32px; background:var(--char); border-radius:9px; }
-  .v-leg-1{ transform:translate3d(96px,-16px,18px) rotateZ(-8deg); }
-  .v-leg-2{ transform:translate3d(96px,16px,18px) rotateZ(8deg); }
+  .wheel{ position:absolute; width:72px; height:72px; margin:-36px 0 0 -36px; border-radius:50%;
+    background:repeating-conic-gradient(var(--wheel) 0deg 8deg, #1a1a1c 8deg 16deg);
+    border:6px solid var(--wheel-rim); transform:rotateY(90deg); }
+  .wheel::after{ content:""; position:absolute; inset:22px; border-radius:50%; background:#4a4a4e; border:3px solid #2a2a2c; }
+  .w-fl{ transform:translate3d(-104px,72px,80px) rotateY(90deg); }
+  .w-fr{ transform:translate3d(104px,72px,80px) rotateY(90deg); }
+  .w-bl{ transform:translate3d(-104px,72px,-80px) rotateY(90deg); }
+  .w-br{ transform:translate3d(104px,72px,-80px) rotateY(90deg); }
+  .strut{ position:absolute; width:6px; height:30px; margin:0 0 0 -3px; background:#2a2a2c; }
+  .strut-l{ transform:translate3d(-98px,40px,76px) rotateZ(-16deg); }
+  .strut-r{ transform:translate3d(98px,40px,76px) rotateZ(16deg); }
 
-  /* ---------- Zone markers (clickable 3D spheres) ---------- */
+  /* ---------- Character (lying down, clearly a person: head+face, shirt, pants, shoes) ---------- */
+  .victim{ position:absolute; transform-style:preserve-3d; transform:translate3d(130px,-14px,10px) rotateZ(18deg); }
+  .v-part{ position:absolute; border-radius:9px; box-shadow:inset 0 -6px 10px rgba(0,0,0,0.25); }
+  .v-torso{ width:100px; height:44px; margin:-22px 0 0 -50px; background:var(--shirt); transform:translateZ(22px); }
+  .v-torso-top{ width:100px; height:44px; margin:-22px 0 0 -50px; background:var(--shirt-shadow); transform:rotateX(90deg) translateZ(22px); }
+  .v-head{ width:38px; height:38px; margin:-19px 0 0 -19px; border-radius:50%; background:var(--skin); transform:translate3d(-72px,0,19px); }
+  .v-face{ position:absolute; width:38px; height:38px; margin:-19px 0 0 -19px; transform:translate3d(-72px,0,38.5px); }
+  .v-eye{ position:absolute; width:5px; height:5px; border-radius:50%; background:#2a2422; }
+  .v-eye-1{ margin-top:-11px; margin-left:-9px; }
+  .v-eye-2{ margin-top:-11px; margin-left:3px; }
+  .v-arm{ width:52px; height:15px; margin:-7.5px 0 0 -26px; background:var(--skin-shadow); transform:translateZ(22px); border-radius:7px; }
+  .v-arm-1{ transform:translate3d(14px,-32px,22px) rotateZ(-26deg); }
+  .v-arm-2{ transform:translate3d(40px,28px,22px) rotateZ(22deg); }
+  .v-leg{ width:58px; height:20px; margin:-10px 0 0 -29px; background:var(--pants); border-radius:8px; }
+  .v-leg-1{ transform:translate3d(86px,-17px,20px) rotateZ(-8deg); }
+  .v-leg-2{ transform:translate3d(86px,17px,20px) rotateZ(8deg); }
+  .v-shoe{ width:22px; height:18px; margin:-9px 0 0 -11px; background:var(--shoe); border-radius:6px; }
+  .v-shoe-1{ transform:translate3d(114px,-17px,20px) rotateZ(-8deg); }
+  .v-shoe-2{ transform:translate3d(114px,17px,20px) rotateZ(8deg); }
+
+  /* ---------- Zone markers (clickable 3D spheres, unmissable when clicked) ---------- */
   .zone{
     position:absolute;
-    width:26px; height:26px;
-    margin:-13px 0 0 -13px;
+    width:30px; height:30px;
+    margin:-15px 0 0 -15px;
     border-radius:50%;
     cursor:pointer;
-    box-shadow:0 0 0 0 rgba(255,255,255,0.0);
+    box-shadow:0 0 0 0 rgba(255,255,255,0.0), 0 0 16px 2px rgba(255,255,255,0.25);
     transition:transform .15s ease, opacity .2s ease, box-shadow .3s ease;
   }
   .zone::after{
     content:"";
-    position:absolute; inset:4px;
+    position:absolute; inset:5px;
     border-radius:50%;
-    background:rgba(255,255,255,0.35);
+    background:rgba(255,255,255,0.4);
   }
-  .zone.done{ opacity:0.3; transform:scale(0.65) translateZ(var(--zone-tz,0)); }
+  .zone .check{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:800; color:#0a0a0a;
+    opacity:0; transform:scale(0.4);
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  .zone.done .check{ opacity:1; transform:scale(1); }
+  .zone.done{ opacity:0.85; transform:scale(0.8) translateZ(var(--zone-tz,0)); box-shadow:none; }
+  .zone.ripple{ animation:zoneRipple .5s ease-out; }
+  @keyframes zoneRipple{
+    0%{ box-shadow:0 0 0 0 rgba(255,255,255,0.7); }
+    100%{ box-shadow:0 0 0 26px rgba(255,255,255,0); }
+  }
   .zone-pulse{ background:var(--zone-pulse); transform:translate3d(150px,-24px,32px); animation:zonePulse 1.8s ease-in-out infinite; }
   .zone-breathing{ background:var(--zone-breathing); transform:translate3d(160px,4px,-2px); animation:zonePulse 1.8s ease-in-out infinite .2s; }
   .zone-neck{ background:var(--zone-neck); transform:translate3d(56px,-2px,26px); animation:zonePulse 1.8s ease-in-out infinite .4s; }
@@ -256,21 +288,29 @@
       <div class="wheel w-br"></div>
       <div class="strut strut-l"></div>
       <div class="strut strut-r"></div>
+      <div class="headlight hl-l"></div>
+      <div class="headlight hl-r"></div>
     </div>
 
     <div class="victim">
       <div class="v-part v-torso-top"></div>
       <div class="v-part v-torso"></div>
-      <div class="v-part v-head"></div>
-      <div class="v-part v-arm v-arm-1"></div>
-      <div class="v-part v-arm v-arm-2"></div>
       <div class="v-part v-leg v-leg-1"></div>
       <div class="v-part v-leg v-leg-2"></div>
+      <div class="v-part v-shoe v-shoe-1"></div>
+      <div class="v-part v-shoe v-shoe-2"></div>
+      <div class="v-part v-arm v-arm-1"></div>
+      <div class="v-part v-arm v-arm-2"></div>
+      <div class="v-part v-head"></div>
+      <div class="v-face">
+        <div class="v-eye v-eye-1"></div>
+        <div class="v-eye v-eye-2"></div>
+      </div>
     </div>
 
-    <div class="zone zone-pulse" id="zone-pulse" data-zone="pulse"></div>
-    <div class="zone zone-breathing" id="zone-breathing" data-zone="breathing"></div>
-    <div class="zone zone-neck" id="zone-neck" data-zone="neck"></div>
+    <div class="zone zone-pulse" id="zone-pulse" data-zone="pulse"><span class="check">&#10003;</span></div>
+    <div class="zone zone-breathing" id="zone-breathing" data-zone="breathing"><span class="check">&#10003;</span></div>
+    <div class="zone zone-neck" id="zone-neck" data-zone="neck"><span class="check">&#10003;</span></div>
   </div>
 </div>
 
@@ -338,10 +378,11 @@
     setTimeout(function(){ prompt.textContent = text; prompt.style.opacity = 1; }, 150);
   }
 
-  function zoneTouched(key){
+  function zoneTouched(key, el){
     if(state[key]) return;
     state[key] = true;
-    document.getElementById('zone-' + key).classList.add('done');
+    el.classList.add('ripple');
+    setTimeout(function(){ el.classList.add('done'); el.classList.remove('ripple'); }, 260);
     segs[key].classList.add('active');
     setPrompt(nextPrompt());
     if(state.pulse && state.breathing && state.neck){
@@ -350,9 +391,10 @@
   }
 
   ['pulse','breathing','neck'].forEach(function(key){
-    document.getElementById('zone-' + key).addEventListener('click', function(e){
+    var el = document.getElementById('zone-' + key);
+    el.addEventListener('click', function(e){
       e.stopPropagation();
-      zoneTouched(key);
+      zoneTouched(key, el);
     });
   });
 
